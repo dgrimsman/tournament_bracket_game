@@ -171,34 +171,3 @@ Change the number of simulated tournaments by editing:
 ```python
 NUM_TOURNAMENTS = 10**6
 ```
-
----
-
-## 🔧 Instructor-Friendly Features
-
-- Strict bracket validation  
-- Probabilistic team strengths & game outcomes  
-- Realistic upset behavior  
-- Weighted scoring  
-- Fair tie-splitting  
-- Detailed bracket viewer  
-- Simple CSV format for student submissions  
-
----
-
-## 🚀 Optional Future Extensions
-
-- Add team names / regions  
-- Graphical bracket visualization  
-- Expected-value analysis for each bracket  
-- Web UI for tournament viewing and submissions  
-
----
-
-If you'd like, I can also generate:
-
-- A **printable bracket template**  
-- SVG diagrams explaining seeding  
-- A GitHub Pages site for pretty presentation
-
-Just let me know!
