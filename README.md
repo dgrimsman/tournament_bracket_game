@@ -7,11 +7,9 @@ Each student submits **5 brackets**, and we run many simulated tournaments (e.g.
 Each team receives a strength value `vᵢ ∈ (0,1)` drawn from a probability distribution.  
 Game outcomes are probabilistic:
 
-```
-P(i beats j) = vᵢ / (vᵢ + vⱼ)
-```
+![probability rule](https://latex.codecogs.com/png.latex?P%28i%20%5Ctext%7Bwins%7D%20%7C%20i%2Cj%29%20%3D%20%5Cfrac%7Bv_i%7D%7Bv_i%20%2B%20v_j%7D)
 
-Each bracket earns weighted points for correct predictions.  
+Each bracket earns weighted points depending on the round.  
 For each simulated tournament, the **top-scoring bracket(s)** split **1 point** evenly.  
 Students are scored by the total number of points accumulated across all tournaments.
 
@@ -21,67 +19,66 @@ Students are scored by the total number of points accumulated across all tournam
 
 ### `tournament_competition.py`
 Contains all logic for:
-- sampling team strengths  
-- tournament simulation  
+- team strength generation  
 - correct 64-team bracket seeding  
+- tournament simulation  
+- scoring and tie-splitting  
 - bracket validation  
-- weighted scoring  
-- tie-splitting scoring  
-- tournament viewer output  
-- leaderboard aggregation  
+- leaderboard calculation  
+- text-based bracket viewer  
 
 ### `brackets_test.csv`
-A test CSV containing 3 example brackets from 3 students.
+A small example dataset with 3 valid brackets.
 
 ---
 
-## 📊 Tournament Seeding Structure
+## 🎯 Tournament Seeding Structure
 
-This uses **standard 64-team seeding**, ensuring that:
+We use **standard 64-team seeded bracket construction**, ensuring:
+
 - Seed 1 plays Seed 64 in Round 1  
-- Seed 1 plays the winner of (32 vs 33) in Round 2  
-- Seed 1 and Seed 2 are in opposite halves and can only meet in the **championship**  
+- Seed 1 plays the winner of Seeds 32 vs 33 in Round 2  
+- Seed 1 and Seed 2 only meet in the **championship**
 
-The bracket is generated recursively so that seed positions match real tournament layouts.
+The bracket is built recursively using a standard seed-placement algorithm.
 
-Example of initial matchups:
+Example initial matchups:
+
 - Game 1: 1 vs 64  
 - Game 2: 32 vs 33  
 - Game 3: 16 vs 49  
 - Game 4: 17 vs 48  
 - Game 5: 8 vs 57  
 - Game 6: 25 vs 40  
-- … through 32 first-round games
+- …  
 
-The script derives all later rounds automatically from these positions.
+The script automatically determines later rounds by pairing adjacent winners.
 
 ---
 
 ## 🎲 Team Strength Distributions
 
-Each team receives a random strength value based on seed tier:
+Each team receives a random strength value `vᵢ` drawn from a distribution depending on its seed:
 
-- **Seeds 1–16:** stable strong teams (low-variance Beta distributions)  
-- **Seeds 17–32:** volatile mid-seeds (higher-variance Beta distributions)  
-- **Seeds 33–64:** bimodal “boom or bust” teams (mixtures of two Betas)
+- **Seeds 1–16:** strong, low-variance Beta distributions  
+- **Seeds 17–32:** medium-variance Beta distributions  
+- **Seeds 33–64:** bimodal mixtures of Betas (“boom-or-bust”)  
 
-This creates realistic upset patterns.
+This creates realistic upset chances and makes tournaments interesting.
 
 ---
 
 ## ⚔️ Game Outcome Rule
 
-Games are probabilistic, not deterministic:
+Game outcomes follow:
 
-```
-P(i wins) = vᵢ / (vᵢ + vⱼ)
-```
+![probability rule](https://latex.codecogs.com/png.latex?P%28i%20%5Ctext%7Bwins%7D%20%5Cmid%20i%2Cj%29%20%3D%20%5Cfrac%7Bv_i%7D%7Bv_i%20%2B%20v_j%7D)
 
-Stronger teams win more often, but upsets are always possible.
+This gives stronger teams higher win probability while still allowing upsets.
 
 ---
 
-## 🧮 Scoring System (per bracket, per tournament)
+## 🧮 Scoring System
 
 Points for each correct prediction:
 
@@ -94,51 +91,57 @@ Points for each correct prediction:
 | Final Four    | 2      | 16     |
 | Championship  | 1      | 32     |
 
-Example:  
-Correctly picking 5 Sweet-16 games earns `5 × 4 = 20` points.
+Example formula:
+
+Correct predictions in a round contribute:
+
+![score formula](https://latex.codecogs.com/png.latex?\text{RoundScore}%20=%20(\text{#Correct})%20\times%20(\text{RoundWeight}))
 
 ---
 
-## 🏆 Tournament-Level Point Splitting (Important!)
+## 🏆 Tournament-Level Point Splitting
 
-For each simulated tournament:
+In each simulated tournament:
 
 1. Compute bracket scores.
 2. Let `S*` be the max score.
-3. Let `T` be all brackets tied for best.
-4. Each bracket in `T` receives:
+3. Let `T` be all brackets that achieved `S*`.
+4. Each bracket receives:
 
-```
-1 / |T| points
-```
+![tie split](https://latex.codecogs.com/png.latex?\text{PointsPerBracket}%20=%20\frac{1}{|T|})
 
 Examples:
-- 1 best bracket → it gets **1.0** point  
-- 4 tied brackets → each gets **0.25**  
-- 10 tied brackets → each gets **0.1**  
 
-A student's final score is the sum over all tournaments and all brackets they submitted.
+- 1 best bracket → earns **1.0** point  
+- 4 tied → each earns **0.25**  
+- 10 tied → each earns **0.1**  
 
 ---
 
 ## 📥 Bracket Submission Format
 
-Students submit their 5 brackets in a CSV:
+Students submit a CSV file:
 
 ```
 student,bracket_name,g1,g2,...,g63
 ```
 
-Where each `g#` is the predicted **seed number (1–64)** winning that game.
+Where:
 
-- Round of 64 → g1 to g32  
-- Round of 32 → g33 to g48  
-- Sweet 16 → g49 to g56  
-- Elite Eight → g57 to g60  
-- Final Four → g61 to g62  
-- Championship → g63  
+- `student` = name or ID  
+- `bracket_name` = label (A, B, C, …)  
+- `g1` … `g63` are the predicted winning **seed numbers (1–64)**
 
-The script validates that each bracket follows the true tournament structure.
+The script will reject invalid brackets (wrong structure or impossible predictions).
+
+Game order:
+
+- Round of 64 → `g1`–`g32`  
+- Round of 32 → `g33`–`g48`  
+- Sweet 16 → `g49`–`g56`  
+- Elite Eight → `g57`–`g60`  
+- Final Four → `g61`–`g62`  
+- Championship → `g63`  
 
 ---
 
@@ -163,10 +166,11 @@ python tournament_competition.py
 
 You will see:
 
-- A detailed printout comparing one bracket to a simulated tournament  
-- Final bracket and student scores (including fractional tie-splits)  
+- A detailed text printout comparing a sample bracket against a simulated tournament  
+- Bracket point totals with fractional tie-splitting  
+- Student leaderboard  
 
-Change the number of simulated tournaments by editing:
+To adjust number of simulations:
 
 ```python
 NUM_TOURNAMENTS = 10**6
