@@ -91,12 +91,6 @@ Points for each correct prediction:
 | Final Four    | 2      | 16     |
 | Championship  | 1      | 32     |
 
-Example formula:
-
-Correct predictions in a round contribute:
-
-![score formula](https://latex.codecogs.com/png.latex?\text{RoundScore}%20=%20(\text{#Correct})%20\times%20(\text{RoundWeight}))
-
 ---
 
 ## 🏆 Tournament-Level Point Splitting
